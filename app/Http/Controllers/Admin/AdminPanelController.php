@@ -92,12 +92,13 @@ class AdminPanelController extends Controller
         return $this->listing(
             'atms',
             'Cajeros automáticos',
-            'Consulta los cajeros registrados en el sistema central.',
+            'Consulta el efectivo reportado y el estado de cada cajero.',
             [
                 'atm_code' => 'Código',
                 'location' => 'Ubicación',
                 'responsible_name' => 'Responsable',
-                'branch_id' => 'Sucursal',
+                'reported_cash_available' => 'Efectivo disponible',
+                'last_reported_at' => 'Último reporte',
                 'status' => 'Estado',
                 'created_at' => 'Registro',
             ]
@@ -123,6 +124,25 @@ class AdminPanelController extends Controller
         );
     }
 
+    public function apiKeys()
+    {
+        return $this->listing(
+            'node_api_keys',
+            'API Keys',
+            'Consulta las credenciales de sucursales y cajeros.',
+            [
+                'node_type' => 'Tipo de nodo',
+                'key_prefix' => 'Prefijo de la clave',
+                'description' => 'Descripción',
+                'status' => 'Estado',
+                'last_used_at' => 'Último uso',
+                'expires_at' => 'Expiración',
+                'created_at' => 'Creación',
+            ],
+            'created_at'
+        );
+    }
+
     private function listing(
         string $table,
         string $title,
@@ -135,6 +155,14 @@ class AdminPanelController extends Controller
         try {
             if (Schema::hasTable($table)) {
                 $fields = array_keys($columns);
+
+                // Mantener el ID disponible para las acciones.
+                if (
+                    Schema::hasColumn($table, 'id')
+                    && !in_array('id', $fields, true)
+                ) {
+                    $fields[] = 'id';
+                }
 
                 $fields = array_values(array_filter(
                     $fields,

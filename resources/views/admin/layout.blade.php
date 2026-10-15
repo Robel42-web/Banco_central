@@ -201,19 +201,28 @@
 
         <nav>
             <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-               href="{{ route('admin.dashboard') }}">Dashboard</a>
+                href="{{ route('admin.dashboard') }}">Dashboard</a>
 
             <a class="nav-link {{ request()->routeIs('admin.accounts') ? 'active' : '' }}"
-               href="{{ route('admin.accounts') }}">Cuentas</a>
+                href="{{ route('admin.accounts') }}">Cuentas</a>
 
             <a class="nav-link {{ request()->routeIs('admin.branches') ? 'active' : '' }}"
-               href="{{ route('admin.branches') }}">Sucursales</a>
+                href="{{ route('admin.branches') }}">Sucursales</a>
+
+            <a class="nav-link {{ request()->routeIs('admin.branches.create') ? 'active' : '' }}"
+                href="{{ route('admin.branches.create') }}">+ Nueva sucursal</a>
 
             <a class="nav-link {{ request()->routeIs('admin.atms') ? 'active' : '' }}"
-               href="{{ route('admin.atms') }}">Cajeros ATM</a>
+                href="{{ route('admin.atms') }}">Cajeros ATM</a>
+
+            <a class="nav-link {{ request()->routeIs('admin.atms.create') ? 'active' : '' }}"
+                href="{{ route('admin.atms.create') }}">+ Nuevo cajero</a>
 
             <a class="nav-link {{ request()->routeIs('admin.transactions') ? 'active' : '' }}"
-               href="{{ route('admin.transactions') }}">Transacciones</a>
+                href="{{ route('admin.transactions') }}">Transacciones</a>
+            <a class="nav-link {{ request()->routeIs('admin.api-keys') ? 'active' : '' }}"
+                href="{{ route('admin.api-keys') }}"> API Keys
+            </a>
         </nav>
 
         <form method="POST" action="{{ route('admin.logout') }}">
