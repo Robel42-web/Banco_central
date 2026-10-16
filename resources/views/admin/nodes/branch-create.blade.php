@@ -6,7 +6,8 @@
 @section('content')
 <div class="card">
     <p class="muted">
-        Registra una sucursal en el Banco Central y genera su API Key.
+        Registra una sucursal en el Banco Central y crea
+        las credenciales de acceso de su administrador.
     </p>
 
     @if ($errors->any())
@@ -22,6 +23,8 @@
     <form method="POST" action="{{ route('admin.branches.store') }}">
         @csrf
 
+        <h3>Datos de la sucursal</h3>
+
         <p>
             <label for="branch_code">Código de sucursal *</label><br>
             <input id="branch_code" name="branch_code"
@@ -32,7 +35,8 @@
 
         <p>
             <label for="name">Nombre *</label><br>
-            <input id="name" name="name" value="{{ old('name') }}"
+            <input id="name" name="name"
+                value="{{ old('name') }}"
                 maxlength="120" required
                 style="width:100%;padding:11px;margin-top:6px">
         </p>
@@ -46,7 +50,8 @@
         <p>
             <label for="responsible_name">Responsable</label><br>
             <input id="responsible_name" name="responsible_name"
-                value="{{ old('responsible_name') }}" maxlength="150"
+                value="{{ old('responsible_name') }}"
+                maxlength="150"
                 style="width:100%;padding:11px;margin-top:6px">
         </p>
 
@@ -58,7 +63,51 @@
                 style="width:100%;padding:11px;margin-top:6px">
         </p>
 
-        <button type="submit">Registrar y generar API Key</button>
+        <hr>
+
+        <h3>Acceso del administrador</h3>
+
+        <p class="muted">
+            Estas credenciales se crearán en el proyecto Supabase
+            de Sucursales y quedarán vinculadas a esta sucursal.
+        </p>
+
+        <p>
+            <label for="admin_email">Correo del administrador *</label><br>
+            <input id="admin_email" name="admin_email"
+                type="email"
+                value="{{ old('admin_email') }}"
+                maxlength="254" required autocomplete="off"
+                style="width:100%;padding:11px;margin-top:6px">
+        </p>
+
+        <p>
+            <label for="admin_password">Contraseña inicial *</label><br>
+            <input id="admin_password" name="admin_password"
+                type="password" minlength="12" required
+                autocomplete="new-password"
+                style="width:100%;padding:11px;margin-top:6px">
+            <small>
+                Utiliza una contraseña de al menos 12 caracteres.
+                Comunícala al administrador de forma segura.
+            </small>
+        </p>
+
+        <p>
+            <label for="admin_password_confirmation">
+                Confirmar contraseña inicial *
+            </label><br>
+            <input id="admin_password_confirmation"
+                name="admin_password_confirmation"
+                type="password" minlength="12" required
+                autocomplete="new-password"
+                style="width:100%;padding:11px;margin-top:6px">
+        </p>
+
+        <button type="submit">
+            Registrar sucursal y crear acceso
+        </button>
+
         <a class="button-link" href="{{ route('admin.branches') }}">
             Cancelar
         </a>

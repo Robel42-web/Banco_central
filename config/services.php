@@ -6,12 +6,6 @@ return [
     |--------------------------------------------------------------------------
     | Third Party Services
     |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Resend, Postmark, AWS, and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
     */
 
     'postmark' => [
@@ -33,6 +27,27 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supabase de Sucursales
+    |--------------------------------------------------------------------------
+    |
+    | Estas variables deben apuntar al proyecto Supabase de Sucursales,
+    | no al proyecto de Banco Central.
+    |
+    */
+
+    'sucursales_supabase' => [
+        'url' => env('SUCURSALES_SUPABASE_URL'),
+        'key' => env('SUCURSALES_SUPABASE_ANON_KEY'),
+    ],
+
+    'sucursales_supabase' => [
+        'url' => env('SUCURSALES_SUPABASE_URL'),
+        'key' => env('SUCURSALES_SUPABASE_ANON_KEY'),
+        'service_key' => env('SUCURSALES_SUPABASE_SERVICE_KEY'),
     ],
 
 ];

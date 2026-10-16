@@ -3,7 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CuentaController;
 use App\Http\Controllers\Api\OperacionController;
+use App\Http\Controllers\Api\SucursalAuthController;
 use App\Http\Middleware\AuthenticateNodeApiKey;
+
+/*
+|--------------------------------------------------------------------------
+| Rutas públicas
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/salud', function () {
     return response()->json([
@@ -12,42 +19,59 @@ Route::get('/salud', function () {
     ]);
 });
 
-// Los endpoints bancarios requieren una API Key válida.
-Route::middleware(AuthenticateNodeApiKey::class)->group(
-    function () {
-        Route::post('/cuentas', [
-            CuentaController::class,
-            'store',
-        ]);
+// Inicio de sesión de Sucursales.
+// No necesita una API Key previa.
+Route::post(
+    '/sucursales/login',
+    [SucursalAuthController::class, 'login']
+)->middleware('throttle:5,1');
 
-        Route::get('/cuentas/numero/{numeroCuenta}', [
-            CuentaController::class,
-            'showPorNumero',
-        ]);
+/*
+|--------------------------------------------------------------------------
+| Rutas protegidas por API Key
+|--------------------------------------------------------------------------
+*/
 
-        Route::get('/cuentas/{id}', [
-            CuentaController::class,
-            'show',
-        ]);
+Route::middleware(AuthenticateNodeApiKey::class)->group(function () {
 
-        Route::get('/cuentas/{id}/saldo', [
-            CuentaController::class,
-            'saldo',
-        ]);
+    Route::post('/cuentas', [
+        CuentaController::class,
+        'store',
+    ]);
 
-        Route::get('/cuentas/{id}/movimientos', [
-            CuentaController::class,
-            'movimientos',
-        ]);
+    Route::get('/cuentas/numero/{numeroCuenta}', [
+        CuentaController::class,
+        'showPorNumero',
+    ]);
 
-        Route::post('/operaciones/depositos', [
-            OperacionController::class,
-            'deposito',
-        ]);
+    Route::get('/cuentas/{id}', [
+        CuentaController::class,
+        'show',
+    ]);
 
-        Route::post('/operaciones/retiros', [
-            OperacionController::class,
-            'retiro',
-        ]);
-    }
-);
+    Route::get('/cuentas/{id}/saldo', [
+        CuentaController::class,
+        'saldo',
+    ]);
+
+    Route::get('/cuentas/{id}/movimientos', [
+        CuentaController::class,
+        'movimientos',
+    ]);
+
+    Route::post('/operaciones/depositos', [
+        OperacionController::class,
+        'deposito',
+    ]);
+
+    Route::post('/operaciones/retiros', [
+        OperacionController::class,
+        'retiro',
+    ]);
+
+    // Validar una sucursal que ya cuenta con API Key.
+    Route::post(
+        '/sucursales/validar-acceso',
+        [SucursalAuthController::class, 'validarAcceso']
+    );
+});

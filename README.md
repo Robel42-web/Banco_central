@@ -1,94 +1,114 @@
 # Banco Central — Sistema Bancario Distribuido
 
-> **Estado del proyecto:** en desarrollo. Este README es una versión inicial y se actualizará cuando el equipo publique el código y despliegue la aplicación.
 
 ## Descripción
 
-El **Banco Central** es el núcleo del Sistema Bancario Distribuido desarrollado como examen práctico. Su responsabilidad es administrar los datos maestros de las cuentas bancarias, mantener los **saldos oficiales**, registrar las transacciones globales y autorizar las operaciones solicitadas por las sucursales y los cajeros automáticos (ATM).
+El **Banco Central** es el núcleo del **Sistema Bancario Distribuido**, desarrollado como examen práctico. Su responsabilidad es administrar las cuentas bancarias y sus **saldos oficiales**, registrar las transacciones globales y autorizar las operaciones solicitadas por sucursales y cajeros automáticos (ATM).
 
-La aplicación está planeada con **Laravel (PHP)** y **Supabase (PostgreSQL)**. El despliegue previsto por el equipo es **Vercel**, sujeto a la adaptación y verificación de compatibilidad de Laravel con ese entorno.
+El backend utiliza **Laravel 13 (PHP)** y la base de datos central se encuentra en **Supabase (PostgreSQL)**. El equipo eligió **Vercel** para desplegar sus tres servicios, con autorización del profesor.
 
 ## Arquitectura general
 
 ```mermaid
 flowchart TB
-    S[Servidor de Sucursales\nLaravel] -->|HTTPS + API Key de sucursal| C[Banco Central\nLaravel / API REST]
-    A[Servidor ATM\nExpress.js] -->|HTTPS + API Key de ATM| C
-    C -->|Conexión autorizada| D[(Supabase Central\nPostgreSQL)]
-    S --> L[(Supabase Sucursales\nDatos operativos locales)]
-    A --> M[(Supabase ATM\nDatos operativos locales)]
+    S[Servidor de Sucursales<br/>Laravel] -->|HTTPS + credencial de nodo| C[Banco Central<br/>Laravel / API REST]
+    A[Servidor ATM<br/>Express.js] -->|HTTPS + credencial de nodo| C
+    C -->|PostgreSQL / conexión segura| D[(Supabase Central<br/>PostgreSQL)]
+    S --> L[(Supabase Sucursales<br/>Datos operativos locales)]
+    A --> M[(Supabase ATM<br/>Datos operativos locales)]
 ```
 
-**Principio fundamental:** el Banco Central conserva la autoridad sobre los saldos y las transacciones. Sucursales y ATM no deben modificar los saldos oficiales directamente; deben utilizar los endpoints autorizados del Banco Central.
+**Principio fundamental:** el Banco Central conserva la autoridad sobre los saldos y las transacciones. Las sucursales y los ATM deben solicitar las operaciones mediante la API autorizada, sin modificar directamente los saldos oficiales.
+
+## Estado de avance
+
+| Componente | Estado | Observaciones |
+| --- | --- | --- |
+| Repositorio GitHub | Disponible | Contiene el proyecto Laravel y archivos de configuración. |
+| Backend Laravel | Código incorporado | Proyecto con `app/`, `bootstrap/`, `config/`, `routes/`, `database/`, `public/` y `tests/`. |
+| Supabase Central | Creado | Esquema central con siete tablas. |
+| Integración GitHub–Vercel | Configurada | Vercel genera despliegues a partir del repositorio. |
+| Compilación en Vercel | Completada | El último despliegue observado figura como `Ready`. |
+| Ejecución de Laravel | **Con incidencia** | Las solicitudes a `/` y `/up` devuelven **HTTP 500**. |
+| Conectividad funcional con Supabase | Pendiente de validar | No se ha confirmado una operación exitosa desde la API desplegada. |
+| Endpoints bancarios | Pendientes de verificación | Es necesario contrastar las rutas propuestas con `routes/api.php`. |
+| Prueba integrada con sucursal y ATM | Pendiente | No hay evidencia de una prueba completa de extremo a extremo. |
 
 ## Responsabilidades del Banco Central
 
 - Administrar cuentas bancarias, sus estados y saldos oficiales.
 - Registrar y consultar el historial global de transacciones.
 - Dar de alta sucursales y cajeros automáticos.
-- Asignar responsables y controlar el efectivo reportado de los nodos.
-- Generar, validar y revocar credenciales API por nodo.
-- Autorizar operaciones bancarias de acuerdo con los permisos del nodo.
+- Controlar el efectivo reportado por los nodos.
+- Gestionar credenciales API independientes y revocables por nodo.
+- Autorizar operaciones de acuerdo con los permisos correspondientes.
 - Proporcionar consultas y reportes administrativos.
-- Evitar saldos negativos, operaciones duplicadas y modificaciones no autorizadas.
+- Prevenir operaciones duplicadas, saldos negativos y modificaciones no autorizadas.
 
-## Tecnologías previstas
+Estas son las **responsabilidades definidas para el módulo**; su implementación completa debe verificarse mediante pruebas.
+
+## Tecnologías utilizadas
 
 | Tecnología | Uso |
 | --- | --- |
-| PHP / Laravel | Backend y API del Banco Central |
-| Composer | Gestión de dependencias PHP |
-| Supabase / PostgreSQL | Persistencia de cuentas, nodos y transacciones |
-| Supabase Auth | Autenticación de administradores, según implementación |
-| GitHub | Control de versiones |
-| Vercel | Plataforma de despliegue acordada por el equipo |
+| PHP 8.3 o superior | Lenguaje requerido por el proyecto. |
+| Laravel 13 | Backend y API REST. |
+| Laravel Sanctum 4 | Dependencia de autenticación incluida en `composer.json`. |
+| Composer | Instalación de dependencias PHP. |
+| Supabase / PostgreSQL | Base de datos central. |
+| Vite / Node.js | Construcción de recursos frontend incluidos en el proyecto. |
+| GitHub | Repositorio y control de versiones. |
+| Vercel | Plataforma de despliegue. |
+| `vercel-php@0.8.0` | Runtime PHP comunitario configurado en `vercel.json`; compatibilidad operativa todavía en revisión. |
 
 ## Base de datos central
 
-El esquema inicial contempla las siguientes tablas:
+El proyecto **banco-central** de Supabase contiene las siguientes tablas:
 
 | Tabla | Propósito |
 | --- | --- |
-| `branches` | Sucursales, responsables, estado y efectivo disponible |
-| `atms` | Cajeros, sucursal asociada, responsables y efectivo reportado |
-| `users_accounts` | Cuentas bancarias y saldos oficiales |
-| `node_api_keys` | Credenciales de autenticación de sucursales y ATM (almacenadas como hash) |
-| `admin_users` | Administradores y roles |
-| `transactions` | Registro global de operaciones bancarias |
-| `node_cash_movements` | Entradas y salidas de efectivo físico de los nodos |
+| `branches` | Sucursales, responsables, estado y efectivo disponible. |
+| `atms` | Cajeros, sucursal asociada, responsables y efectivo reportado. |
+| `users_accounts` | Cuentas bancarias y saldos oficiales. |
+| `node_api_keys` | Credenciales de acceso para sucursales y ATM. |
+| `admin_users` | Administradores y roles. |
+| `transactions` | Historial global de operaciones bancarias. |
+| `node_cash_movements` | Entradas y salidas de efectivo físico de los nodos. |
 
-La base de datos utiliza identificadores UUID, montos con precisión decimal, restricciones de integridad y controles de acceso mediante RLS. La configuración concreta debe revisarse junto con el backend implementado.
+El esquema utiliza identificadores UUID, montos decimales y controles de acceso. Se han configurado políticas y restricciones de seguridad en Supabase. La compatibilidad exacta entre el esquema y los modelos del backend debe validarse.
 
-## Reglas de negocio principales
+## Reglas de negocio previstas
 
 1. El número de cuenta debe ser único.
-2. Los saldos oficiales se consultan en el Banco Central.
-3. No se autorizan operaciones sobre cuentas bloqueadas o cerradas.
-4. Los importes deben ser positivos y representarse con precisión decimal.
-5. El saldo no puede ser negativo.
-6. Cada operación monetaria debe registrarse en el historial global.
-7. Las operaciones repetidas deben identificarse mediante una clave de idempotencia para evitar cargos duplicados.
-8. La actualización del saldo y el registro de la transacción deben realizarse de forma atómica.
-9. Cada sucursal y ATM debe autenticarse con una credencial independiente y revocable.
+2. Los saldos oficiales se administran en el Banco Central.
+3. No se deben autorizar operaciones sobre cuentas bloqueadas o cerradas.
+4. Los importes deben ser positivos y manejar precisión decimal.
+5. No se deben permitir saldos negativos.
+6. Toda operación monetaria debe quedar registrada.
+7. Las solicitudes repetidas deben controlarse mediante un mecanismo de idempotencia.
+8. La modificación del saldo y el registro de la transacción deben ser atómicos.
+9. Cada sucursal y ATM debe autenticarse con credenciales propias.
 
-## Contrato inicial de la API (propuesto)
+> Estas reglas describen el comportamiento esperado. **No todas han sido verificadas con pruebas automatizadas o de integración.**
 
-Estos endpoints aparecen en el documento de planificación del equipo. **Todavía no se ha confirmado que estén implementados** y podrían cambiar durante el desarrollo.
+## API REST — contrato de referencia
 
-| Método | Endpoint previsto | Función |
+Los siguientes endpoints corresponden a la **planificación inicial** del equipo. Su existencia y funcionamiento deben comprobarse contra las rutas reales del proyecto.
+
+| Método | Endpoint propuesto | Función |
 | --- | --- | --- |
-| `POST` | `/api/v1/branches/accounts` | Registrar una cuenta desde una sucursal autorizada |
-| `GET` | `/api/v1/accounts/{accountNumber}/balance` | Consultar saldo oficial |
-| `GET` | `/api/v1/accounts/{accountNumber}/transactions` | Consultar transacciones de una cuenta |
-| `POST` | `/api/v1/atm/withdrawals` | Solicitar un retiro desde un ATM |
-| `POST` | `/api/v1/atm/deposits` | Registrar un depósito desde un ATM |
-| `GET` | `/api/v1/admin/transactions` | Consultar el historial global para administración |
+| `POST` | `/api/v1/branches/accounts` | Registrar una cuenta desde una sucursal autorizada. |
+| `GET` | `/api/v1/accounts/{accountNumber}/balance` | Consultar el saldo oficial. |
+| `GET` | `/api/v1/accounts/{accountNumber}/transactions` | Consultar transacciones de una cuenta. |
+| `POST` | `/api/v1/atm/withdrawals` | Solicitar un retiro desde un ATM. |
+| `POST` | `/api/v1/atm/deposits` | Registrar un depósito desde un ATM. |
+| `GET` | `/api/v1/admin/transactions` | Consultar el historial global de administración. |
 
-La documentación definitiva de rutas, parámetros, respuestas, autenticación y códigos HTTP se publicará mediante **OpenAPI** cuando el código esté disponible.
+**OpenAPI:** documentación definitiva pendiente de incorporar o verificar en el repositorio.
 
-## Configuración local (pendiente de validar con el código)
+## Instalación local
 
-Cuando el repositorio contenga una aplicación Laravel, el procedimiento habitual será:
+Requisitos: PHP compatible con `composer.json`, Composer y acceso autorizado a la base de datos de desarrollo.
 
 ```bash
 git clone https://github.com/Robel42-web/Banco_central.git
@@ -98,62 +118,92 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Después se deberán configurar las variables de entorno y ejecutar las migraciones o comandos que el equipo confirme. **No ejecutes migraciones sobre Supabase sin revisar antes si las tablas ya existen.**
+En Windows, si `cp` no está disponible, se puede copiar `.env.example` a `.env` desde el explorador o usar el comando equivalente del terminal.
+
+Después se deben configurar las variables de entorno y, cuando corresponda, iniciar el servidor local:
+
+```bash
+php artisan serve
+```
+
+**Precaución:** no ejecutar `php artisan migrate` sobre Supabase sin revisar previamente el esquema existente; las tablas centrales ya fueron creadas.
 
 ### Variables de entorno de referencia
 
-Los nombres exactos deben coincidir con la implementación del backend. Este bloque contiene únicamente ejemplos, **nunca credenciales reales**.
+Ejemplo sin credenciales reales:
 
 ```dotenv
-APP_ENV=local
-APP_DEBUG=true
-APP_KEY=
+APP_NAME="Banco Central"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://banco-central-one.vercel.app
+APP_KEY=base64:CLAVE_GENERADA_DE_FORMA_SEGURA
+LOG_CHANNEL=stderr
 
 DB_CONNECTION=pgsql
-DB_HOST=HOST_POSTGRES_SUPABASE
+DB_HOST=HOST_DEL_POOLER_SUPABASE
 DB_PORT=5432
 DB_DATABASE=postgres
-DB_USERNAME=USUARIO_POSTGRES
+DB_USERNAME=USUARIO_DEL_POOLER
 DB_PASSWORD=CONTRASENA_PRIVADA
 DB_SSLMODE=require
 
-SUPABASE_URL=https://PROYECTO.supabase.co
-SUPABASE_PUBLISHABLE_KEY=CLAVE_PUBLICABLE
-SUPABASE_SECRET_KEY=CLAVE_SECRETA_SOLO_BACKEND
+SESSION_DRIVER=cookie
+QUEUE_CONNECTION=sync
+CACHE_STORE=array
 ```
 
-> El proyecto podría utilizar conexión PostgreSQL directa, API de Supabase o ambas. No todas las variables anteriores serán necesarias en todos los casos. La configuración se ajustará al código real.
+Los valores de conexión deben obtenerse del proyecto **banco-central** en Supabase. El host, el usuario y el puerto dependen del método de conexión seleccionado. Otras variables, como las de Supabase Auth o credenciales de nodos, dependerán de la implementación real.
 
-**Seguridad:** nunca subir `.env`, contraseñas de base de datos, tokens de GitHub ni claves secretas a GitHub. Mantener únicamente un `.env.example` con valores ficticios. Las claves de Supabase con privilegios elevados deben utilizarse exclusivamente en el servidor.
+**Seguridad:** no publicar `.env`, contraseñas, tokens, claves secretas de Supabase ni la clave real `APP_KEY`. Los secretos se configuran en el entorno del servidor o en Vercel.
 
-## Despliegue previsto en Vercel
-
-El equipo acordó utilizar **Vercel para los tres nodos**, con autorización del profesor. Este repositorio se vinculará a un proyecto independiente de Vercel.
-
-**Importante:** Laravel no dispone del mismo entorno PHP persistente que ofrece un servidor convencional en Vercel. Antes de desplegar será necesario verificar la estrategia de ejecución de PHP, las rutas, las dependencias, el almacenamiento temporal y las variables de entorno. No se debe considerar completado el despliegue hasta comprobar que la API responde correctamente.
+## Despliegue en Vercel
 
 - **Repositorio:** https://github.com/Robel42-web/Banco_central
-- **URL pública:** pendiente de despliegue.
-- **Despliegue automático desde GitHub:** pendiente de configurar y verificar.
-- **Pruebas de integración:** pendientes.
+- **Proyecto Vercel:** `banco-central`
+- **URL pública asignada:** https://banco-central-one.vercel.app
+- **Origen:** rama principal del repositorio GitHub.
+- **Configuración:** `api/index.php` como punto de entrada y `vercel.json` con runtime PHP comunitario.
+- **Resultado de construcción:** último despliegue observado en estado **Ready**.
+- **Resultado de ejecución:** **HTTP 500** al acceder a `/` y `/up`.
 
-## Prueba funcional esperada
+### Incidencia técnica pendiente
 
-1. Banco Central registra una sucursal y un ATM, con sus credenciales y efectivo disponible.
-2. Una sucursal autorizada registra una cuenta con saldo inicial de **$1,000 MXN**.
-3. Banco Central verifica el registro y el saldo.
-4. Un ATM autorizado solicita un retiro de **$300 MXN**.
-5. Banco Central comprueba que el saldo oficial queda en **$700 MXN** y que existe el registro de la transacción.
+Aunque Vercel completó la construcción y publicó un dominio, Laravel presenta el siguiente error en los registros de ejecución:
 
-Esta secuencia corresponde a la demostración prevista; **no implica que las pruebas ya hayan sido ejecutadas**.
+```text
+Illuminate\Container\BindingResolutionException:
+Target class [view] does not exist.
+```
 
-## Documentación adicional (pendiente)
+Este mensaje puede ser consecuencia de un fallo anterior durante el inicio de Laravel; por ello **no se considera demostrada la disponibilidad del backend ni la conexión con la base de datos**. Se requiere revisar el arranque de Laravel, la compatibilidad del runtime PHP y los registros completos antes de dar por terminado el despliegue.
 
-- Archivo OpenAPI (`openapi.yaml` o equivalente).
-- Capturas de pruebas y respuestas de la API.
-- URL pública de Vercel.
-- Evidencia de despliegue continuo desde GitHub.
-- Instrucciones definitivas de instalación y pruebas.
+### Verificación de disponibilidad
+
+```text
+GET https://banco-central-one.vercel.app/up
+```
+
+**Último resultado observado:** HTTP 500. La prueba de salud se repetirá después de corregir la incidencia.
+
+## Escenario de prueba de integración previsto
+
+1. Registrar una sucursal y un ATM autorizados, con credenciales y efectivo disponible.
+2. Registrar desde una sucursal una cuenta con saldo inicial de **$1,000 MXN**.
+3. Consultar desde Banco Central el saldo registrado.
+4. Solicitar desde el ATM un retiro de **$300 MXN**.
+5. Verificar que el saldo oficial sea **$700 MXN** y que la transacción quede registrada.
+
+**Estado:** escenario definido, **prueba de extremo a extremo pendiente**. No se presenta como resultado ya obtenido.
+
+## Evidencias y documentación pendientes
+
+- Resolver el HTTP 500 del despliegue.
+- Confirmar los endpoints implementados y documentarlos en OpenAPI.
+- Registrar capturas de solicitudes y respuestas de la API.
+- Verificar autenticación, permisos, transacciones e idempotencia.
+- Probar comunicación con Sucursales y ATM.
+- Documentar resultados de pruebas y el funcionamiento del despliegue continuo.
 
 ## Equipo y repositorios relacionados
 
@@ -161,4 +211,6 @@ Esta secuencia corresponde a la demostración prevista; **no implica que las pru
 - **Servidor Sucursales:** https://github.com/Robel42-web/Servidor_sucursales
 - **Servidor ATM:** https://github.com/Robel42-web/Servidor_atm
 
-Proyecto académico: **Examen Práctico — Sistema Bancario Distribuido**.
+---
+
+**Proyecto académico:** Examen Práctico — Sistema Bancario Distribuido.
